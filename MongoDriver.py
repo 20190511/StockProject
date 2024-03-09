@@ -74,7 +74,7 @@ class MongoDB:
 
         return True
 
-    def read(self, dbname: str, tablename: str) -> list:
+    def read(self, dbname: str, tablename: str, query={}) -> list:
         ''' MongoDB 에서 dbName.tablename 에 해당하는 모든 Record 를 dictionary List 형태로 반환
         _ Junhyeong (20190511)
         :param dbname: database name 
@@ -83,33 +83,46 @@ class MongoDB:
         '''
         db = self.client[dbname]
         collections = db[tablename]
-        rawDict = collections.find()
+        rawDict = collections.find(query)
         retDict = [{k: v for k, v in d.items() if k != "_id"} for d in rawDict]
         return retDict
 
-    def read_first_one(self, dbname: str, tablename: str) -> dict:
+    def read_first_one(self, dbname: str, tablename: str, idx="", query={}, limits=1) -> dict:
         ''' MongoDB 에서 dbName.tableName 에 해당 하는 가장 첫 번째 record 반환
          _ Junhyeong (20190511)
         :param dbname: Database Name
         :param tablename: Table Name
+        :param idx: 정렬시킬 인덱스
+        :parm query: 찾을 쿼리
         :return: 해당 하는 dictionary 값
         '''
+        if idx == "":
+            idx = "_id"
+
         db = self.client[dbname]
         collections = db[tablename]
-        retData = collections.find_one(sort=[("_id", pymongo.ASCENDING)])
-        return retData
 
-    def read_last_one(self, dbname: str, tablename: str) -> dict:
+        if limits == 1:
+            return collections.find_one(query, sort=[(idx, pymongo.ASCENDING)])
+        else:
+            return collections.find(query, sort=[(idx, pymongo.ASCENDING)]).limit(limits)
+
+    def read_last_one(self, dbname: str, tablename: str, idx="", query={1}, limits=1) -> dict:
         ''' MongoDB 에서 dbName.tableName 에 해당 하는 가장 마지막 record 반환
          _ Junhyeong (20190511)
         :param dbname: Database Name
         :param tablename: Table Name
         :return: 해당하는 dictionary 값
         '''
+        if idx == "":
+            idx = "_id"
+
         db = self.client[dbname]
         collections = db[tablename]
-        retData = collections.find_one(sort=[("_id", pymongo.DESCENDING)])
-        return retData
+        if limits == 1:
+            return collections.find_one(query, sort=[(idx, pymongo.DESCENDING)])
+        else:
+            return collections.find(query, sort=[(idx, pymongo.DESCENDING)]).limit(limits)
 
 if __name__ == "__main__":
 
@@ -117,3 +130,4 @@ if __name__ == "__main__":
     test = [{"company":"APS", "code":"054620"}, {"company":"AP시스템", "code":"265520"}, {"company":"AP위성", "code":"211270"}, {"company":"3S", "code":"060310"}]
     obj = MongoDB()
     #bj.insert("StockCode", "KOSDAQ", test, "code", primaryKeySet=True)
+    #print(obj.read("StockCode", "KOSPI",  {"company": "동화약품"}))

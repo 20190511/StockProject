@@ -135,7 +135,7 @@ class StockKr:
         '''
 
         for company, tr_code in self.thema_total_dict.items():
-            last_date = self.mongo.read_last_one("DayInfo", tr_code)
+            last_date = self.mongo.read_last_one("DayInfo", "Info","날짜", {"티커": tr_code})
             # 없는 경우 새 갱신 - 기본 120일..
             start_dt = self.day_counter(offset=200, pos=-1)
 
@@ -143,9 +143,9 @@ class StockKr:
                 start_dt = last_date["날짜"] + timedelta(days=1)
 
             print(f"{company} 회사의 일봉 데이터를 가져오는중 ...")
-            self.get_day_info(tr_code, start_dt)
+            self.get_day_info(company, tr_code, start_dt)
 
-    def get_day_info(self, tk: str, start: datetime):
+    def get_day_info(self, company: str, tk: str, start: datetime):
         ''' 오늘을 기준으로 start 까지 받아오기.
         :param tk: 회사코드 (Ticker)
         :param start: datetime 프레임
@@ -162,7 +162,10 @@ class StockKr:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore") # 워닝 무시
                 df_to_dict = df.reset_index().to_dict(orient="records")
-            self.mongo.insert("DayInfo", tk, df_to_dict, primaryKey="날짜", primaryKeySet=True)
+                for rec in df_to_dict:
+                    rec["회사명"] = company
+                    rec["티커"] = tk
+            self.mongo.insert("DayInfo", "Info", df_to_dict, primaryKeySet=False)
 
     def get_day_info_krx(self, tr_code: str, start_dt: datetime, end_dt: datetime, mode="d")\
             -> pd.DataFrame:
@@ -207,15 +210,19 @@ class StockKr:
     def readDaySQL(self, company: str) -> pd.DataFrame:
         ''' MongoDB (DayInfo.회사코드) 에서 DayInfo 정보 (일봉, 거래량..) 받아오기
         _ Junhyeong (20190511)
-        :param path: 경로
         :param company: reading할 회사
         :return: 일봉 Dataframe
         '''
 
         # 회사가 DB에 없을 경우 빈 DataFrame 리턴
         try:
-            comToTk = self.tk_total_dict[company]
-            findingSQL = self.mongo.read("DayInfo", comToTk)
+            query = {
+                "$or": [
+                    {"회사명": company},
+                    {"티커": company}
+                ]
+            }
+            findingSQL = self.mongo.read("DayInfo", "Info", query)
         except Exception:
             print(f"{company} 는 invalid 데이터 입니다.")
             return pd.DataFrame()
@@ -291,4 +298,4 @@ class StockKr:
 if __name__ == "__main__":
     obj = StockKr()
     obj.module(code_update=False, dayinfo_update=True)
-
+    print(obj.readDaySQL("005930"))
