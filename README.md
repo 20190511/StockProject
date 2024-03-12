@@ -1,8 +1,13 @@
 주식 지표 별 분석 정확성 및 종목 추천 *with MongoDB
 ---
-# 프로젝트 목표 : 주식 별 주식 지표 (MACD, 일목균형표, 이동평균선) 추이 정확성(확률) 과 분석
+# Project Object And Vision : 주식 별 주식 지표 (MACD, 일목균형표, 이동평균선) 추이 정확성(확률) 과 분석
 
-## 기술 스택
+## Status Board
+- [Succeed] : Get A Daily Stock Data and calculate Them.
+- [Retrieve] : Try to modify a DataBase Structure. (TranSaction Mode -> List Mode)
+- [Being Researching] : Speed Up - Get DB Mechanism and Scheme. 
+
+## 기술 Stack
 ```commandline
 0. Krx, NaverAPI, 한국투자증권 API : GET Daily Stock Information
 1. Python : GET 데이터 -> MongoDB 
@@ -15,7 +20,7 @@
 2. JavaScript(React, Node.js) : Front-end
 ```
 
-## 데이터 베이스 설계
+## DataBase Infrastructure
 ```commandline
 DB1. DayInfo : 일별 주식 데이터 보관 데이터 베이스
     > Info : 주식 일봉 데이터 저장 테이블
@@ -40,8 +45,8 @@ DB2. StockCode : KOSPI, KOSDAQ Ticker 정보 데이터베이스
 ```
 
 
-## Developer
+## Developers
 1. 배준형 : SSU CES 19, Back-End, Daily Information Infra. Implementation
-2. 서유준 : SSU CES 19. Back-End, 
+2. 서유준 : SSU CES 19. Back-End, Real Time Information Infra Implementation (Reserved)
 3. 이준혁 : SSU CES 18, Front-End (Android)
 4. 유승준 : SSU CES 19, Front-End (Web)

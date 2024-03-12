@@ -91,7 +91,7 @@ class StockCals:
                 for rec in ret_dict:
                     rec["회사명"] = company
                     rec["티커"] = tk
-            #print(ret_dict)
+            print(ret_dict)
             self.mongo.insert("DayInfo", "Cals", ret_dict)
 
 
