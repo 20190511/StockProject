@@ -6,6 +6,12 @@
 ```commandline
 0. Krx, NaverAPI, 한국투자증권 API : GET Daily Stock Information
 1. Python : GET 데이터 -> MongoDB 
+    Install line ---
+    A. pymongo : mongoDB 의 Python Cursor 모듈
+    B. pandas : DataFrame 사용
+        # SMA, EMA 정규화 계산 모듈 : 인위적으로 다운로드 해줘야함 (Windows 기준) 
+    C. talib : pip install TA_Lib-0.4.24-cp310-cp310-win_amd64.whl 
+    D. pykrx : Get 데이터 모듈
 2. JavaScript(React, Node.js) : Front-end
 ```
 
