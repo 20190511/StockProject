@@ -452,7 +452,24 @@ class StockAnaly:
             naming
         ] = "down_cross"
 
+    ''' B. Reading Moudles '''
+    def readAnalySQL(self, name: str):
+        # 회사가 DB에 없을 경우 빈 DataFrame 리턴
+        try:
+            query = {
+                "$or": [
+                    {"회사명": name},
+                    {"티커": name}
+                ]
+            }
+            findingSQL = self.mongo.read("DayInfo", "Analys", query, client=self.mongo.client2)
+        except Exception:
+            print(f"{name} 는 invalid 데이터 입니다.")
+            return pd.DataFrame()
+
+        return pd.DataFrame(findingSQL).set_index("날짜")
 if __name__ == "__main__":
     obj = StockAnaly()
-    obj.module(compute_criteria=False)
+    obj.module(day_info=True, compute_criteria=True)
+    print(obj.readAnalySQL("삼성전자"))
     #print(obj.anal_namedict)

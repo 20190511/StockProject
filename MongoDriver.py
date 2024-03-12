@@ -159,7 +159,9 @@ if __name__ == "__main__":
 
     datas = obj.read("DayInfo", "Analys", {
         "티커": "207940"
-    })
+    }, client=obj.client2)
 
+    for item in datas:
+        print(item)
     #bj.insert("StockCode", "KOSDAQ", test, "code", primaryKeySet=True)
     #print(obj.read("StockCode", "KOSPI",  {"company": "동화약품"}))

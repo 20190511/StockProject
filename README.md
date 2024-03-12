@@ -5,6 +5,7 @@
 ## Status Board
 - [Succeed] : Get A Daily Stock Data and calculate Them.
 - [Retrieve] : Try to modify a DataBase Structure. (TranSaction Mode -> List Mode)
+- [Retrieve] : Auto-Update Stock Programming (15:30 : Close time in Stock)
 - [Being Researching] : Speed Up - Get DB Mechanism and Scheme. 
 
 ## 기술 Stack
@@ -48,7 +49,6 @@ DB2. StockCode : KOSPI, KOSDAQ Ticker 정보 데이터베이스
     > KOSPI : {"날짜", 
     > KOSDAQ :
 ```
-
 
 ## Developers
 1. 배준형 : SSU CES 19, Back-End, Daily Information Infra. Implementation
