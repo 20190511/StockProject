@@ -107,7 +107,7 @@ class StockAnaly:
         for company, ticker in self.info_obj.thema_total_dict.items():  # 나중에 이 부분을 건들면 다른 딕셔너리에 대해서도 수행가능.
             analys_last_date = datetime(1999, 1, 1)
             print("[" + company + " 지표 분석 중 ...]")
-            last_analys_30 = self.mongo.read_last_one("DayInfo", "Analys", "날짜", {"티커": ticker}, 30)
+            last_analys_30 = self.mongo.read_last_one("DayInfo", "Analys", "날짜", {"티커": ticker}, 30, client=self.mongo.client2)
             try:
                 analys_last_date = pd.to_datetime(last_analys_30.next()["날짜"])
                 before = self.mongo.read_last_one("DayInfo", "Info", "날짜", {"날짜": {"$lt": analys_last_date}, "티커": ticker}, 120)
@@ -181,7 +181,7 @@ class StockAnaly:
                     rec["회사명"] = company
                     rec["티커"] = ticker
             print(df_to_dict)
-            self.mongo.insert("DayInfo", "Analys", df_to_dict, primaryKeySet=False)
+            self.mongo.insert("DayInfo", "Analys", df_to_dict, primaryKeySet=False, client=self.mongo.client2)
             #print(processing_frame.tail(5))
 
 
@@ -455,4 +455,4 @@ class StockAnaly:
 if __name__ == "__main__":
     obj = StockAnaly()
     obj.module(compute_criteria=False)
-    print(obj.anal_namedict)
+    #print(obj.anal_namedict)

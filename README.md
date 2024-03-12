@@ -23,8 +23,10 @@
 ![분석 과정 사진](./Img/img.png)
 
 ## DataBase Infrastructure
+- [첫 번째 서버](https://cloud.mongodb.com/v2/65eb18d3c025ed475766b68b#/metrics/replicaSet/65eb19fd3a98b5058ee942d0/explorer/DayInfo)
+- [두 번째 서버](https://cloud.mongodb.com/v2/65efca9dba57dc67b8cb647d#/metrics/replicaSet/65efcad9b8aae4715087d853/explorer/DayInfo/Analys/find)
 ```commandline
-DB1. DayInfo : 일별 주식 데이터 보관 데이터 베이스
+DB1. DayInfo : 일별 주식 데이터 보관 데이터 베이스 (Database 분리 : 1(첫번째 서버), 2(두번째 서버)
     > Info : 주식 일봉 데이터 저장 테이블
         {날짜, 시가, 고가, 저가, 거래량, 등락률, 시가총액, 거래대금, 상장주식 수
         기관합계_매수, 기타법인_매수, 개인_매수, 외국인합계_매수, 전체_매수,

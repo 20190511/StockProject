@@ -1,3 +1,4 @@
+import pandas as pd
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import pymongo
@@ -6,10 +7,12 @@ ID_PASSWD_FILE = "password"
 class MongoDB:
     def __init__(self):
         self.uri = ""
+        self.uri2 = ""
         self.get_url()
         self.err = False
         try:
             self.client = MongoClient(self.uri, server_api=ServerApi('1'))
+            self.client2 = MongoClient(self.uri2, server_api=ServerApi("1"))
         except pymongo.errors.ConnectionFailure:
             self.err = True
 
@@ -29,10 +32,11 @@ class MongoDB:
                     break
                 id_passwd = line.split(":",1)
                 self.uri = f"mongodb+srv://{id_passwd[0]}:{id_passwd[1]}@stocksql.bn49sg9.mongodb.net/?retryWrites=true&w=majority&appName=StockSQL"
+                self.uri2 = f"mongodb+srv://{id_passwd[0]}:{id_passwd[1]}@cluster0.dt997xz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 
 
-    def insert(self, dbName:"str", tableName:"str", queryList: list, primaryKey="", primaryKeySet=False):
+    def insert(self, dbName:"str", tableName:"str", queryList: list, primaryKey="", primaryKeySet=False, client = None):
         ''' MongoDB의 dbName.tableName 에 insert를 하는 메소드
          _ Junhyeong (20190511)
         :param dbName: Database Name
@@ -43,7 +47,9 @@ class MongoDB:
         :return: 성공 시 True 에러시 False
         :return:
         '''
-        db = self.client[dbName]
+        if client is None:
+            client = self.client
+        db = client[dbName]
         collections = db[tableName]
 
         if primaryKeySet:
@@ -58,7 +64,7 @@ class MongoDB:
             return False
         return True
 
-    def insert_listone(self, dbName:"str", tableName:"str", queryList: list, primaryKey="", primaryKeySet=False):
+    def insert_listone(self, dbName:"str", tableName:"str", queryList: list, primaryKey="", primaryKeySet=False, client=None):
         ''' Primary Key 충돌로 인하여 한 Query 씩 Insert 할 시 돌아가는 System Method
          _ Junhyeong (20190511)
         :param dbName: Database Name
@@ -68,7 +74,9 @@ class MongoDB:
         :param primaryKeySet: PK 설정여부
         :return: 성공 시 True 에러시 False
         '''
-        db = self.client[dbName]
+        if client is None:
+            client = self.client
+        db = client[dbName]
         collections = db[tableName]
 
         if primaryKeySet:
@@ -88,20 +96,22 @@ class MongoDB:
 
         return True
 
-    def read(self, dbname: str, tablename: str, query={}) -> list:
+    def read(self, dbname: str, tablename: str, query={}, client=None) -> list:
         ''' MongoDB 에서 dbName.tablename 에 해당하는 모든 Record 를 dictionary List 형태로 반환
         _ Junhyeong (20190511)
         :param dbname: database name 
         :param tablename: table name
         :return: 해당 table의 딕셔너리가 들어있는 리스트
         '''
-        db = self.client[dbname]
+        if client is None:
+            client = self.client
+        db = client[dbname]
         collections = db[tablename]
         rawDict = collections.find(query)
         retDict = [{k: v for k, v in d.items() if k != "_id"} for d in rawDict]
         return retDict
 
-    def read_first_one(self, dbname: str, tablename: str, idx="", query={}, limits=1) -> dict:
+    def read_first_one(self, dbname: str, tablename: str, idx="", query={}, limits=1, client=None) -> dict:
         ''' MongoDB 에서 dbName.tableName 에 해당 하는 가장 첫 번째 record 반환
          _ Junhyeong (20190511)
         :param dbname: Database Name
@@ -113,7 +123,9 @@ class MongoDB:
         if idx == "":
             idx = "_id"
 
-        db = self.client[dbname]
+        if client is None:
+            client = self.client
+        db = client[dbname]
         collections = db[tablename]
 
         if limits == 1:
@@ -121,7 +133,7 @@ class MongoDB:
         else:
             return collections.find(query, sort=[(idx, pymongo.ASCENDING)]).limit(limits)
 
-    def read_last_one(self, dbname: str, tablename: str, idx="", query={1}, limits=1) -> dict:
+    def read_last_one(self, dbname: str, tablename: str, idx="", query={1}, limits=1, client=None) -> dict:
         ''' MongoDB 에서 dbName.tableName 에 해당 하는 가장 마지막 record 반환
          _ Junhyeong (20190511)
         :param dbname: Database Name
@@ -130,8 +142,9 @@ class MongoDB:
         '''
         if idx == "":
             idx = "_id"
-
-        db = self.client[dbname]
+        if client is None:
+            client = self.client
+        db = client[dbname]
         collections = db[tablename]
         if limits == 1:
             return collections.find_one(query, sort=[(idx, pymongo.DESCENDING)])
@@ -143,5 +156,10 @@ if __name__ == "__main__":
     # DB에 들어가는지 확인..
     test = [{"company":"APS", "code":"054620"}, {"company":"AP시스템", "code":"265520"}, {"company":"AP위성", "code":"211270"}, {"company":"3S", "code":"060310"}]
     obj = MongoDB()
+
+    datas = obj.read("DayInfo", "Analys", {
+        "티커": "207940"
+    })
+
     #bj.insert("StockCode", "KOSDAQ", test, "code", primaryKeySet=True)
     #print(obj.read("StockCode", "KOSPI",  {"company": "동화약품"}))
