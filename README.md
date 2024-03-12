@@ -20,6 +20,8 @@
 2. JavaScript(React, Node.js) : Front-end
 ```
 
+![분석 과정 사진](./img.png)
+
 ## DataBase Infrastructure
 ```commandline
 DB1. DayInfo : 일별 주식 데이터 보관 데이터 베이스
