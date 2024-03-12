@@ -54,6 +54,8 @@ class MongoDB:
             collections.insert_many(queryList)
         except pymongo.errors.BulkWriteError:
             return self.insert_listone(dbName, tableName, queryList, primaryKey, primaryKeySet)
+        except TypeError:
+            return False
         return True
 
     def insert_listone(self, dbName:"str", tableName:"str", queryList: list, primaryKey="", primaryKeySet=False):

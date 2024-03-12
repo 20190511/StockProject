@@ -7,6 +7,7 @@ import os
 import warnings
 
 global_today = datetime(datetime.now().year, datetime.now().month, datetime.now().day)
+DEBUG = False
 
 class StockKr:
     def __init__(self):
@@ -31,11 +32,11 @@ class StockKr:
         self.force_total_dict = dict()  # 오늘의 세력주(거래량폭등주) 데이터 가져오기. <-- 기본 상위 10개
 
     ''' AUTO. 각 Module Wrapper Method _ Junhyeong(20190511) '''
-    def module (self, code_update=False, dayinfo_update=True, dayinfo_sub_update=True):
+    def module (self, code_update=False, dayinfo_update=True):
         ''' ALL-OUT Module __ DayInfo DataBase 갱신 통합모듈 *Junhyeong(20190511)
         :param code_update: Ticker (Company Code) Update 여부
         :param dayinfo_update: 
-        :param dayinfo_sub_update: 
+        :param dayinfo_sub_update: 사용 X
         :return: 
         '''
         if self.mongo.err:
@@ -69,10 +70,15 @@ class StockKr:
         if update or len(self.tk_KOSPI_tkdict) == 0:
             self.writeTicker("KOSPI")
         self.readTicker()
-        self.readTmpThema()
         # 통합 딕셔너리 설정
         self.tk_total_dict.update(self.tk_KOSDAQ_tkdict)
         self.tk_total_dict.update(self.tk_KOSPI_tkdict)
+
+        if DEBUG:
+            self.readTmpThema() #임시방편으로 몇 개만 해봄
+        else:
+            self.thema_total_dict = self.tk_total_dict
+
 
     ''' A. Ticker 조회 메소드 _ Junhyeong(20190511) '''
     def readTicker(self):
@@ -154,7 +160,10 @@ class StockKr:
         base = start
         base_end = self.day_counter(base, 80, 1)
         while base < global_today:
-            df = self.get_day_info_krx(tr_code=tk, start_dt=base, end_dt=base_end)
+            try:
+                df = self.get_day_info_krx(tr_code=tk, start_dt=base, end_dt=base_end)
+            except Exception:
+                return
             base = df.index[-1] + timedelta(days=1)
             base_end = self.day_counter(base, 80, 1)
 
@@ -226,7 +235,6 @@ class StockKr:
         except Exception:
             print(f"{company} 는 invalid 데이터 입니다.")
             return pd.DataFrame()
-
         return pd.DataFrame(findingSQL).set_index("날짜")
 
     ''' D. 거래량 상위 회사 추출 메소드 _ Junhyeong (20190511) '''

@@ -4,65 +4,11 @@ import talib as ta
 import warnings
 import GetInfo
 
-def dt(year=0, mon=0, day=0, strs=""):
-    ''' (2023,08,11) or "20230811" 을 datatime 객체로 Translate 함수.
-    :param year:
-    :param mon:
-    :param day:
-
-    :param str:
-    :return:
-    '''
-    if strs != "":
-        return datetime(year=int(strs[:4]), month=int(strs[4:6]), day=int(strs[6:]))
-    else:
-        return datetime(year=year, month=mon, day=day)
-def df_t(df : pd.DataFrame, index_num : int):
-    ''' DataFrame 인덱스값 범위를 계산해서 구해주는 함수.
-    '''
-    if index_num < 0 or index_num >= len(df):
-        return -1
-    return df.loc[index_num]
-
-def df_check_row(df: pd.DataFrame, row_name: str):
-    ''' DataFrame에 해당 row_name이 존재하는지 여부
-    '''
-    df_row_list = df.columns
-    return row_name in df_row_list
-def df_unify (*dfs):
-    ''' DataFrame을 합쳐주는 함수.
-        ex) df1, df2, df3 데이터를 df로 합쳐줌.'''
-    df = pd.concat(list(dfs), axis=1)
-    return df.loc[:, ~df.T.duplicated()]
-
 class StockCals:
     def __init__(self):
         self.infoObj = GetInfo.StockKr()
         self.mongo = self.infoObj.mongo
-        self.anal_namedict = {
-            "SMA60_check": "60일 이동평균선 추이",
-            "전기_nearess_check(후행)": "전환선 기준선 가까움(후행)",
-            "전기_nearess_check": "전환선 기준선 가까움",
-            "MACD_check": "MACD 상태",
-            "후행스팬_line_cross_check": "후행스팬 x 전환선_기준선",
-            "후행스팬_bong_cross_check": "후행스팬 x 봉",
-            "스팬꼬리_check": "선행스팬 꼬리방향",
-            "스팬위치_check": "봉과 구름대",
-            "전_cross_기": "전환선 x 기준선",
-            "봉_cross_전기": "봉 x 전환선_기준선",
-        }
-        self.anal_namedict_r = dict()  # 역으로 구성된 딕셔너리.
         self.saved_df = pd.DataFrame()  # 분석 or 지표계산할 때 총괄 데이터프레임
-        self.anal_score = {"O": 0,
-                           "up_near": 1,
-                           "up_cross": 2,
-                           "up": 3,
-                           "down_near": 4,
-                           "down_cross": 5,
-                           "down": 6,
-                           "X": 7,
-                           "mid": 8}
-        self.anal_scoreboard = dict()
 
         # 이동평균선 리스트
         self.sma_window = [5, 10, 20, 60, 120]
@@ -70,13 +16,6 @@ class StockCals:
 
         # 최고가 관련
         self.high_crit = [9, 26]
-
-        # 분석용 DataFrame
-        self.read_df_dayinfo = pd.DataFrame()  # 일봉 데이터 가져오는 멤버변수
-        self.read_df_criteria = pd.DataFrame()  # 지표 데이터 가져오는 멤버변수
-
-        # 점수 측정용 DataFrame
-        self.today_score = dict()  # {key=점수 : Value=점수}
 
 
     ''' X. 총 모듈 '''
@@ -92,13 +31,13 @@ class StockCals:
         :param hgih_crit: 최고가 날 기준 (기본값 240일)
         :return:
         '''
-        cals_last_date = datetime(1999,1,1)
         for company, tk in self.infoObj.thema_total_dict.items():
+            cals_last_date = datetime(1999, 1, 1)
+            print("[" + company + " 지표 계산중...]")
             last_cals_30 = self.mongo.read_last_one("DayInfo", "Cals", "날짜", {"티커": tk}, 30)
             df = None
-            if last_cals_30:
+            try:
                 cals_last_date = pd.to_datetime(last_cals_30.next()["날짜"])
-                info_last_date = None
                 before = self.mongo.read_last_one("DayInfo", "Info", "날짜", {"날짜": {"$lt": cals_last_date}, "티커": tk}, 120)
                 last_docunment = None
                 for document in before:
@@ -114,28 +53,35 @@ class StockCals:
                         continue
                 if not after:
                     df = self.infoObj.readDaySQL(company)
-            else:
-                df = self.infoObj.readDaySQL(company)
+            except StopIteration:
+                try:
+                    df = self.infoObj.readDaySQL(company)
+                except KeyError:
+                    continue
+
             self.saved_df = pd.DataFrame(index=df.index)
 
-            print("[" + company + " 지표 계산중...]")
-            # 1. 주가이동평균 구함.
-            print("{주가이동평균(Moving Average) 계산 중 ...}")
-            self.movingAverage(cal_df=df)
+            try:
+                # 1. 주가이동평균 구함.
+                print("{주가이동평균(Moving Average) 계산 중 ...}")
+                self.movingAverage(cal_df=df)
 
-            # 2. MACD 구함.
-            print("{MACD(Moving Average Convergence Divergence) 계산 중 ...}")
-            self.macd(cal_df=df)
+                # 2. MACD 구함.
+                print("{MACD(Moving Average Convergence Divergence) 계산 중 ...}")
+                self.macd(cal_df=df)
 
-            # 3. 일목기준표 구함.
-            print("{일목균형표(Ichimoku Kinkoyo) 계산 중 ...}")
-            self.ichimoku(cal_df=df)
+                # 3. 일목기준표 구함.
+                print("{일목균형표(Ichimoku Kinkoyo) 계산 중 ...}")
+                self.ichimoku(cal_df=df)
 
-            # 4. X일 중 최고가를 구함.
-            print("{" + str(self.high_crit) + "일 최고가(highest price) 계산 중 ...}")
-            self.highest_price(cal_df=df)
-            print(self.saved_df.tail(5))
+                # 4. X일 중 최고가를 구함.
+                print("{" + str(self.high_crit) + "일 최고가(highest price) 계산 중 ...}")
+                self.highest_price(cal_df=df)
+                #print(self.saved_df.tail(5))
+            except KeyError:
+                continue
 
+            self.saved_df = self.saved_df.reset_index()
             self.saved_df = self.saved_df.reset_index()
             processing_frame = self.saved_df[self.saved_df["날짜"] > cals_last_date]
 
@@ -145,8 +91,9 @@ class StockCals:
                 for rec in ret_dict:
                     rec["회사명"] = company
                     rec["티커"] = tk
-
+            #print(ret_dict)
             self.mongo.insert("DayInfo", "Cals", ret_dict)
+
 
     def movingAverage(self, cal_df: pd.DataFrame):
         ''' A. 이동평균선 계산 (Moving Arerage)
@@ -189,7 +136,9 @@ class StockCals:
         self.saved_df["선행스팬1"] = ((self.saved_df["기준선"] + self.saved_df["전환선"])/2).shift(26)
         self.saved_df["선행스팬2"] = ((cal_df["고가"].rolling(window=52).max() + cal_df["저가"].rolling(window=52).min()) / 2).shift(26)
         self.saved_df["후행스팬"] = cal_df["종가"].shift(-25)
-        self.saved_df["선행스팬1_미래"] = cal_df["종가"] = ((self.saved_df["기준선"] + self.saved_df["전환선"])/2)
+        # 주가 지표가 트랜젝션으로 넣을 시 NULL 트랜젝션에 스팬만 들어가게 되는데 그러지 말고
+        # 현재 지표를 26일로 당기기 전의 값을 기록. (즉, 계산 시 26일 앞으로 당겨서 봐야함)
+        self.saved_df["선행스팬1_미래"] = ((self.saved_df["기준선"] + self.saved_df["전환선"])/2)
         self.saved_df["선행스팬2_미래"] = ((cal_df["고가"].rolling(window=52).max() + cal_df["저가"].rolling(window=52).min()) / 2)
 
     def highest_price(self, cal_df: pd.DataFrame):
