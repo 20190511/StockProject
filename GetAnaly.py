@@ -119,8 +119,8 @@ class StockAnaly:
                 if last_docunment:
                     after_info = self.mongo.read("DayInfo", "Info", {"날짜": {"$gte": last_docunment["날짜"]}, "티커": ticker})
                     after_calc = self.mongo.read("DayInfo", "Cals", {"날짜": {"$gte": last_docunment["날짜"]}, "티커": ticker})
-                    self.read_df_dayinfo = pd.DataFrame(after_info).set_index("날짜")
-                    self.read_df_criteria = pd.DataFrame(after_calc).set_index("날짜")
+                    self.read_df_dayinfo = pd.DataFrame(after_info).set_index("날짜").sort_index()
+                    self.read_df_criteria = pd.DataFrame(after_calc).set_index("날짜").sort_index()
                     info_last_date = self.read_df_dayinfo.tail(1).index
                     diff_day = info_last_date - analys_last_date
                     if diff_day.days == 0:
@@ -132,9 +132,14 @@ class StockAnaly:
                     except KeyError:
                         continue
                     print(self.read_df_criteria)
+            except KeyError:
+                continue
             except StopIteration:
-                self.read_df_dayinfo = self.info_obj.readDaySQL(company)
-                self.read_df_criteria = self.calc_obj.read_days_cals(company)
+                try:
+                    self.read_df_dayinfo = self.info_obj.readDaySQL(company)
+                    self.read_df_criteria = self.calc_obj.read_days_cals(company)
+                except KeyError:
+                    continue
 
             try:
                 self.saved_df = pd.DataFrame(index=self.read_df_dayinfo.index)
@@ -165,18 +170,20 @@ class StockAnaly:
                 self.compare_today_yesterday_price(df_day=self.read_df_dayinfo)
 
                 self.saved_df = self.saved_df.reset_index()
-                processing_frame = self.saved_df[self.saved_df["날짜"] > analys_last_date]
-                # DataFrame --> Dictionary (열 이름 겹침 워닝은 무시하도록 설정)
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")  # 워닝 무시
-                    df_to_dict = processing_frame.to_dict(orient="records")
-                    for rec in df_to_dict:
-                        rec["회사명"] = company
-                        rec["티커"] = ticker
-                self.mongo.insert("DayInfo", "Analys", df_to_dict, primaryKeySet=False)
-                print(processing_frame.tail(5))
-            except Exception:
-                pass
+            except KeyError:
+                continue
+            processing_frame = self.saved_df[self.saved_df["날짜"] > analys_last_date]
+            # DataFrame --> Dictionary (열 이름 겹침 워닝은 무시하도록 설정)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")  # 워닝 무시
+                df_to_dict = processing_frame.to_dict(orient="records")
+                for rec in df_to_dict:
+                    rec["회사명"] = company
+                    rec["티커"] = ticker
+            print(df_to_dict)
+            self.mongo.insert("DayInfo", "Analys", df_to_dict, primaryKeySet=False)
+            #print(processing_frame.tail(5))
+
 
 
     ''' B. 계산 메소드들 
@@ -447,5 +454,5 @@ class StockAnaly:
 
 if __name__ == "__main__":
     obj = StockAnaly()
-    obj.module()
+    obj.module(compute_criteria=False)
     print(obj.anal_namedict)

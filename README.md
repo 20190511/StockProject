@@ -20,7 +20,7 @@
 2. JavaScript(React, Node.js) : Front-end
 ```
 
-![분석 과정 사진](./img.png)
+![분석 과정 사진](./Img/img.png)
 
 ## DataBase Infrastructure
 ```commandline
