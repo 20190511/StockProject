@@ -1,7 +1,7 @@
 주식 지표 별 분석 정확성 및 종목 추천 *with MongoDB
 ---
 # Project Object And Vision : 주식 별 주식 지표 (MACD, 일목균형표, 이동평균선) 추이 정확성(확률) 과 분석
-
+## [제안서](https://github.com/20190511/StockProject/blob/master/%EC%BB%B4%EA%B0%9C%EB%A1%A0%20%EC%A0%9C%EC%95%88%EC%84%9C.pdf)
 ## Status Board
 - [Succeed] : Get A Daily Stock Data and calculate Them.
 - [Retrieve] : Try to modify a DataBase Structure. (TranSaction Mode -> List Mode)

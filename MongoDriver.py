@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
     datas = obj.read("DayInfo", "Analys", {
         "티커": "207940"
-    }, client=obj.client2)
+    }, client=obj.client2 )
 
     for item in datas:
         print(item)
