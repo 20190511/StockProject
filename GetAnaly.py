@@ -497,5 +497,5 @@ class StockAnaly:
 
 if __name__ == "__main__":
     obj = StockAnaly()
-    obj.module(day_info=False, compute_criteria=False)
+    obj.module(day_info=True, compute_criteria=True)
     #print(obj.anal_namedict)

@@ -314,5 +314,6 @@ class StockKr:
 
 if __name__ == "__main__":
     obj = StockKr()
-    obj.module(code_update=False, dayinfo_update=True)
-    print(obj.readDaySQL("005930"))
+    #obj.module(code_update=False, dayinfo_update=True)
+    obj.get_company_size()
+    #print(obj.readDaySQL("005930"))
